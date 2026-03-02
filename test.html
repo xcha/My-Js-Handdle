@@ -1,0 +1,27 @@
+<style>
+.container {
+  border: 2px solid #333;
+  width: 400px;
+}
+
+.float-left {
+  float: left;
+  width: 100px;
+  height: 100px;
+  background: lightcoral;
+  margin-right: 10px;
+}
+
+.text-content {
+  background: lightblue;
+}
+</style>
+
+<div class="container">
+  <div class="float-left">浮动元素</div>
+  <div class="text-content">
+    这里的文字会环绕浮动元素。浮动元素脱离了正常的文档流，
+    但是文本内容会识别它的存在并环绕它。
+    这是浮动和绝对定位的主要区别。
+  </div>
+</div>

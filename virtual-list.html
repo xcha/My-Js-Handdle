@@ -1,0 +1,231 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      .virtual-list-container {
+        width: 400px;
+        height: 600px;
+        overflow: auto;
+        border: 1px solid #ccc;
+        position: relative;
+      }
+
+      .virtual-list-phantom {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        z-index: -1;
+      }
+
+      .virtual-list-content {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+      }
+
+      .list-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        box-sizing: border-box;
+      }
+
+      .list-item:hover {
+        background-color: #f5f5f5;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      // virtual-list.js
+      class VirtualList {
+        constructor(container, options = {}) {
+          this.container =
+            typeof container === "string"
+              ? document.querySelector(container)
+              : container;
+
+          // 配置参数
+          this.options = {
+            itemHeight: options.itemHeight || 50, // 每项高度
+            data: options.data || [], // 数据
+            bufferSize: options.bufferSize || 5, // 缓冲区大小
+            renderItem: options.renderItem || this.defaultRenderItem, // 渲染函数
+            ...options,
+          };
+
+          this.state = {
+            startIndex: 0, // 起始索引
+            endIndex: 0, // 结束索引
+            scrollTop: 0, // 滚动位置
+            visibleCount: 0, // 可见数量
+          };
+
+          this.init();
+        }
+
+        // 默认渲染函数
+        defaultRenderItem(item, index) {
+          const div = document.createElement("div");
+          div.className = "list-item";
+          div.textContent = `${index}: ${JSON.stringify(item)}`;
+          return div;
+        }
+
+        // 初始化
+        init() {
+          this.createStructure();
+          this.bindEvents();
+          this.updateVisibleCount();
+          this.render();
+        }
+
+        // 创建 DOM 结构
+        createStructure() {
+          // 清空容器
+          this.container.innerHTML = "";
+          this.container.style.position = "relative";
+
+          // 创建占位元素（撑开滚动条）
+          this.phantom = document.createElement("div");
+          this.phantom.className = "virtual-list-phantom";
+          this.phantom.style.height =
+            this.options.data.length * this.options.itemHeight + "px";
+
+          // 创建内容容器
+          this.content = document.createElement("div");
+          this.content.className = "virtual-list-content";
+
+          // 添加到容器
+          this.container.appendChild(this.phantom);
+          this.container.appendChild(this.content);
+        }
+
+        // 绑定事件
+        bindEvents() {
+          this.container.addEventListener(
+            "scroll",
+            this.handleScroll.bind(this),
+          );
+          window.addEventListener("resize", this.handleResize.bind(this));
+        }
+
+        // 处理滚动
+        handleScroll() {
+          const scrollTop = this.container.scrollTop;
+          this.state.scrollTop = scrollTop;
+
+          // 计算新的起始索引
+          const startIndex = Math.floor(scrollTop / this.options.itemHeight);
+
+          if (startIndex !== this.state.startIndex) {
+            this.state.startIndex = Math.max(
+              0,
+              startIndex - this.options.bufferSize,
+            );
+            this.updateVisibleCount();
+            this.render();
+          }
+        }
+
+        // 处理窗口大小变化
+        handleResize() {
+          this.updateVisibleCount();
+          this.render();
+        }
+
+        // 更新可见数量
+        updateVisibleCount() {
+          const containerHeight = this.container.clientHeight;
+          this.state.visibleCount =
+            Math.ceil(containerHeight / this.options.itemHeight) +
+            this.options.bufferSize * 2;
+
+          this.state.endIndex = Math.min(
+            this.state.startIndex + this.state.visibleCount,
+            this.options.data.length,
+          );
+        }
+
+        // 渲染可见项
+        render() {
+          const { startIndex, endIndex } = this.state;
+          const { data, itemHeight, renderItem } = this.options;
+
+          // 清空内容
+          this.content.innerHTML = "";
+
+          // 设置内容容器位置
+          this.content.style.transform = `translateY(${startIndex * itemHeight}px)`;
+
+          // 渲染可见项
+          for (let i = startIndex; i < endIndex; i++) {
+            if (i >= data.length) break;
+
+            const item = data[i];
+            const itemElement = renderItem(item, i);
+
+            if (typeof itemElement === "string") {
+              this.content.insertAdjacentHTML("beforeend", itemElement);
+            } else {
+              this.content.appendChild(itemElement);
+            }
+          }
+        }
+
+        // 刷新数据
+        refresh(newData) {
+          this.options.data = newData || this.options.data;
+          this.phantom.style.height =
+            this.options.data.length * this.options.itemHeight + "px";
+          this.updateVisibleCount();
+          this.render();
+        }
+
+        // 滚动到指定索引
+        scrollToIndex(index) {
+          if (index < 0 || index >= this.options.data.length) return;
+
+          const targetScrollTop = index * this.options.itemHeight;
+          this.container.scrollTop = targetScrollTop;
+
+          this.state.startIndex = Math.max(0, index - this.options.bufferSize);
+          this.updateVisibleCount();
+          this.render();
+        }
+
+        // 销毁
+        destroy() {
+          this.container.removeEventListener("scroll", this.handleScroll);
+          window.removeEventListener("resize", this.handleResize);
+          this.container.innerHTML = "";
+        }
+      }
+
+      // 使用示例
+      const data = Array.from({ length: 10000 }, (_, i) => ({
+        id: i + 1,
+        name: `Item ${i + 1}`,
+        content: `Content for item ${i + 1}`,
+      }));
+
+      const list = new VirtualList("#app", {
+        data: data,
+        itemHeight: 50,
+        bufferSize: 5,
+        renderItem: (item, index) => {
+          return `<div class="list-item">
+      <strong>${index}. ${item.name}</strong>
+      <span style="color: #999; margin-left: 10px;">${item.content}</span>
+    </div>`;
+        },
+      });
+
+      // API 调用
+      // list.scrollToIndex(500);
+      // list.refresh(newData);
+    </script>
+  </body>
+</html>
