@@ -1,11 +1,16 @@
-const p1 = new Promise((resolve, reject) => {
-  setTimeout(() => {
-    res("ok");
-  }, 2000);
-});
+function Person(name) {
+  this.name = name;
+  this.say = () => {
+    console.log(`Hi,my name is ${this.name}`);
+  };
+}
 
-console.log(
-  p1.then((res) => {
-    console.log(res);
-  }),
-);
+const p1 = new Person("zmq");
+const p2 = new Person("lyq");
+
+// Person.prototype.say = function () {
+//   console.log(`Hi,I'm ${this.name}`);
+// };
+
+p1.say();
+p2.say();

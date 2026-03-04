@@ -56,14 +56,34 @@ function mydebounce(fn, wait) {
   };
 }
 
-function throttleTimer(func, wait) {
-  let timer = null;
+function debounceImmediate(fn, delay) {
+  let timer;
   return function (...args) {
-    if (!timer) {
-      timer = setTimeout(() => {
-        func.apply(this, args);
-        timer = null;
-      }, wait);
-    }
+    const callNow = !timer;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = null;
+    }, delay);
+    if (callNow) fn.apply(this, args);
   };
 }
+
+function de(fn, wait = 300) {
+  let timer;
+  return function (...args) {
+    const callNow = !timer; //当timer为null 即不存在计时器 代表可以执行函数
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = null; //计时结束 可以执行
+    }, wait);
+    if (callNow) fn.apply(this, args);
+  };
+}
+
+// 使用场景
+searchInput.addEventListener(
+  "input",
+  debounce((e) => {
+    console.log("搜索:", e.target.value);
+  }, 300),
+);

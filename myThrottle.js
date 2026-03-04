@@ -12,27 +12,23 @@
  * @param {Number} wait 等待时间
  * @return {*}
  */
-function throttle(fn, wait) {
-  let startTime = Date.now();
 
-  return function () {
-    const nowTime = Date.now();
-
-    // 计算两次执行的间隔时间 是否大于 wait 时间
-    if (nowTime - startTime >= wait) {
-      startTime = nowTime;
-      return fn.apply(this, arguments);
-    }
-  };
-}
-
-function myThrottle1(fn, wait) {
-  let lastTime = 0;
+function throttleTimer(fn, wait = 300) {
+  let timer;
   return function (...args) {
-    const now = Date.now();
-    if (now - lastTime >= wait) {
-      lastTime = now;
-      return fn.apply(this, args);
+    if (!timer) {
+      timer = setTimeout(() => {
+        fn.apply(this, args);
+        timer = null;
+      }, wait);
     }
   };
 }
+
+// 使用场景
+window.addEventListener(
+  "scroll",
+  throttleTimer(() => {
+    console.log("滚动位置:", window.scrollY);
+  }, 200),
+);
