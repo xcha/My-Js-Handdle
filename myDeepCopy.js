@@ -8,29 +8,29 @@
  *  5、value 如果为对象 就递归拷贝 否则就赋值
  * @param {*} obj
  * @param {*} [map=new Map()]
- * @return {*} 
+ * @return {*}
  */
-function deepCopy(obj, map = new Map()){
-  if (!obj || typeof obj !== 'object'){
-    return obj
+function deepCopy(obj, map = new Map()) {
+  if (!obj || typeof obj !== "object") {
+    return obj;
   }
 
   // 判断 obj 是否在 map 中存在 如果存在就不需要递归调用 直接返回数据
   if (map.get(obj)) {
-    return map.get(obj)
+    return map.get(obj);
   }
-  const newObj = Array.isArray(obj) ? [] : {}
+  const newObj = Array.isArray(obj) ? [] : {};
 
   // 放入 map 中 记录当前对象 避免重复拷贝 循环引用
-  map.set(obj, newObj)
+  map.set(obj, newObj);
 
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
       // 如果 value 还是一个对象 递归获取 否则就赋值
-      newObj[key] = typeof obj[key] === 'object' ? deepCopy(obj[key], map) : obj[key]
+      newObj[key] =
+        typeof obj[key] === "object" ? deepCopy(obj[key], map) : obj[key];
     }
   }
 
-  return newObj
+  return newObj;
 }
-

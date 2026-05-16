@@ -9,21 +9,43 @@
  */
 
 Function.prototype.myApply = function (context, args) {
-  if (typeof this !== 'function') {
-    return new TypeError('type error')
+  if (typeof this !== "function") {
+    return new TypeError("type error");
   }
 
   // 和 call 一样 只不过传入的参数只有一个 类型为数组 在执行 fn 的时候将参数展开
-  context = context || window
+  context = context || window;
 
-  const fn=Symbol('fn')
+  const fn = Symbol("fn");
 
-  context[fn] = this
+  context[fn] = this;
 
-  const result = args ? context[fn](...args) : context[fn]()
+  const result = args ? context[fn](...args) : context[fn]();
 
-  delete context[fn]
+  delete context[fn];
 
-  return result
+  return result;
+};
+
+function myNew1(fn, ...args) {
+  if (typeof fn !== "function") {
+    throw new TypeError("fn must be a function");
+  }
+
+  let obj = Object.create(fn.prototype);
+
+  let res = fn.myApply(obj, args);
+
+  return res instanceof Object ? res : obj;
 }
 
+const Person = function (name, age) {
+  this.name = name;
+  this.age = age;
+};
+Person.prototype.say = function () {
+  console.log(this.name);
+};
+
+const p = myNew1(Person, "张三123", 18);
+p.say();

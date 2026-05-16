@@ -16,7 +16,7 @@ function myNew(fn, ...agrs) {
   }
 
   let obj = Object.create(fn.prototype); //创建一个新对象，继承fn的原型对象
-
+  // 等价 obj.__proto__ = fn.prototype;
   let res = fn.apply(obj, agrs); //调用fn函数，将obj作为this，agrs作为参数
 
   const flag = res instanceof Object; //判断fn是否返回一个对象
@@ -33,15 +33,20 @@ function myNew1(fn, ...args) {
     throw new TypeError("fn must be a function");
   }
 
-  // 1. 创建一个对象，并把原型指向构造函数的 prototype
-  const obj = Object.create(fn.prototype);
+  let obj = Object.create(fn.prototype);
 
-  // 2. 把 this 绑定到新对象上，执行构造函数
-  const res = fn.apply(obj, args);
+  let res = fn.apply(obj, args);
 
-  // 3. 如果构造函数返回的是对象或函数（且不为 null），就返回它；
-  //    否则返回我们自己创建的 obj
-  return res !== null && (typeof res === "object" || typeof res === "function")
-    ? res
-    : obj;
+  return res instanceof Object ? res : obj;
 }
+
+const Person = function (name, age) {
+  this.name = name;
+  this.age = age;
+};
+Person.prototype.say = function () {
+  console.log(this.name);
+};
+
+const p = myNew1(Person, "张三", 18);
+p.say();
