@@ -14,18 +14,19 @@ Promise.myAll = function (promises) {
     // 4. 遍历每个 promise
     arr.forEach((p, i) => {
       // 5. 确保 p 是 promise（如果不是会被包装）
-      Promise.resolve(p).then(
-        // 成功回调
-        (value) => {
-          results[i] = value; // 按原顺序存储结果
-          finished++; // 完成计数 +1
-          if (finished === arr.length) {
-            resolve(results); // 所有都完成，整体 resolve
-          }
-        },
-        // 失败回调（任何一个失败，整体 reject）
-        reject,
-      );
+      Promise.resolve(p)
+        .then(
+          // 成功回调
+          (value) => {
+            results[i] = value; // 按原顺序存储结果
+            finished++; // 完成计数 +1
+            if (finished === arr.length) {
+              resolve(results); // 所有都完成，整体 resolve
+            }
+          },
+          // 失败回调（任何一个失败，整体 reject）
+        )
+        .catch(reject);
     });
   });
 };

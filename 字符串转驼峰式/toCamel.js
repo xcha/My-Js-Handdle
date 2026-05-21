@@ -27,15 +27,18 @@ function toCamelCase(str) {
 }
 
 function main(data) {
+  // 是数组对象就递归 直到是普通对象
   if (Array.isArray(data)) {
     return data.map((obj) => main(obj));
   }
-
+  // 针对对象的遍历
   if (data !== null && typeof data === "object") {
     const res = {};
     for (const key in data) {
+      // 这个属性是该对象本身的 不是原型链继承来的
       if (data.hasOwnProperty(key)) {
         const camelKey = toCamelCase(key);
+        // 处理完键名key 再去尝试递归这个值value（对象嵌套对象）
         res[camelKey] = main(data[key]);
       }
     }
@@ -43,28 +46,6 @@ function main(data) {
   }
   return data;
 }
-
-// function convertKeysToCamelCase(data) {
-//   // 处理数组
-//   if (Array.isArray(data)) {
-//     return data.map((item) => convertKeysToCamelCase(item));
-//   }
-
-//   // 处理对象
-//   if (data !== null && typeof data === "object") {
-//     const result = {};
-//     for (const key in data) {
-//       if (data.hasOwnProperty(key)) {
-//         const camelKey = toCamelCase(key);
-//         result[camelKey] = convertKeysToCamelCase(data[key]);
-//       }
-//     }
-//     return result;
-//   }
-
-//   // 基础类型直接返回
-//   return data;
-// }
 
 // 测试
 const jsonData = {

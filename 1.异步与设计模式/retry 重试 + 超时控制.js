@@ -1,3 +1,37 @@
+// Q1: retry 怎么实现？→ 失败就递归，次数减一
+// Q2: 超时怎么控制？→ Promise.race([请求, 超时Promise])
+// Q3: 带延迟？→ 失败后 setTimeout 再重试
+
+// 用户调用 retry(fn)
+//         ↓
+//    尝试执行 fn
+//         ↓
+//    ┌─────────────┐
+//    │ 是否成功？   │
+//    └─────────────┘
+//         ↓
+//     成功 → 返回结果 ✅
+//         ↓
+//     失败 → 还有重试次数吗？
+//         ↓
+//     有 → 等待一段时间 → 回到"尝试执行" 🔄
+//         ↓
+//     无 → 抛出错误 ❌
+
+// 基础 retry
+async function retry(fn, times) {
+  for (let i = 0; i <= times; i++) {
+    try {
+      return await fn(); // 尝试执行
+    } catch (error) {
+      // 失败了？继续循环，再来一次
+      console.log(`第${i + 1}次失败，继续重试`);
+    }
+  }
+  throw new Error("全部失败");
+}
+
+// 工具函数
 const sleep = (ms) => {
   return new Promise((r) => setTimeout(r, ms));
 };
