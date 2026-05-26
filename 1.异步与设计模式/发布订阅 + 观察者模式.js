@@ -8,10 +8,18 @@
 // → 发布订阅：{ eventName: [cb1, cb2] }
 // → 观察者：observers: [observer1, observer2]
 
+// 在你的 on 和 emit 方法最后加上 return this，意味着每次调用它们后，返回的都是 eventBus 实例本身。
+// 这样你就可以紧接着调用这个实例的其他方法。
+
 // 发布订阅
 class EventEmitter {
   constructor() {
     this.events = {};
+    // events = {
+    //   click: [fn1, fn2, fn3],
+    //   login: [fn4, fn5],
+    //   logout: [fn6],
+    // };
   }
 
   on(event, cb) {
@@ -20,25 +28,24 @@ class EventEmitter {
   }
 
   emit(event, ...args) {
-    (this.events[event] || []).forEach((cb) => cb(...args));
+    (this.events[event] ||= []).forEach((cb) => cb(...args));
     return this;
   }
 
   off(event, cb) {
-    if (!cb) this.events[event] = [];
-    else
-      this.events[event] = (this.events[event] || []).filter(
-        (f) => f !== cb && f.raw !== cb,
-      );
+    this.events[event] = this.events[event].filter(
+      (f) => f !== cb && f.raw !== cb, // 不是参数指定的cb并且这个没被once包装过的函数保留下来
+    );
     return this;
   }
 
   once(event, cb) {
     const wrapper = (...args) => {
-      cb(...args);
-      this.off(event, wrapper);
+      cb(...args); // 执行一次
+      this.off(event, wrapper); // 然后删掉
     };
-    wrapper.raw = cb;
+    wrapper.raw = cb; // 保存原函数的引用（方便 off 时能找到）
+
     return this.on(event, wrapper);
   }
 }
@@ -50,12 +57,15 @@ class Subject {
   }
   add(observer) {
     this.observers.push(observer);
+    return this;
   }
   remove(observer) {
     this.observers = this.observers.filter((o) => o !== observer);
+    return this;
   }
   notify(data) {
     this.observers.forEach((o) => o.update(data));
+    return this;
   }
 }
 
@@ -77,6 +87,4 @@ bus.emit("msg", "hello"); // 'hello'
 const subject = new Subject();
 const ob1 = new Observer("A");
 const ob2 = new Observer("B");
-subject.add(ob1);
-subject.add(ob2);
-subject.notify("更新了"); // A 收到: 更新了, B 收到: 更新了
+subject.add(ob1).add(ob2).notify("更新了"); // A 收到: 更新了, B 收到: 更新了
