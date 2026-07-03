@@ -1,67 +1,11 @@
-/**
- * 基础请求函数
- * @param {string} url - 请求地址
- * @param {object} options - 配置选项
- * @returns {Promise} 请求结果
- */
-function request(url, options = {}) {
-  const {
-    method = "GET",
-    headers = {},
-    body = null,
-    timeout = 30000,
-  } = options;
-
-  // 创建 AbortController 用于超时控制
-  const controller = new AbortController();
-  const { signal } = controller;
-
-  // 设置超时
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, timeout);
-
-  return fetch(url, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : null,
-    signal,
-  })
-    .then((response) => {
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      // 根据 Content-Type 自动解析响应
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        return response.json();
-      }
-      return response.text();
-    })
-    .catch((error) => {
-      clearTimeout(timeoutId);
-
-      if (error.name === "AbortError") {
-        throw new Error("请求超时");
-      }
-      throw error;
-    });
-}
-
-// V2
+// 多个模块可能同时请求同一接口，需要避免重复请求并缓存结果，同时对慢请求做超时保护。
 function createRequest() {
-  const cache = {};
-  const pending = {};
+  const cache = {}; // 缓存
+  const pending = {}; // 正在处理的
 
   function request(key, api, timeout = 3000) {
     if (key in cache) return Promise.resolve(cache[key]);
-    if (pending[key]) return pending[key];
+    if (key in pending) return pending[key];
 
     const p = Promise.race([
       api(),

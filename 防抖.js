@@ -11,32 +11,6 @@
  * @param {boolean} [immediate=false]
  * @return {*}
  */
-function debounce(fn, wait, immediate = false) {
-  let timer = null;
-
-  return function () {
-    // 存在定时器 清空
-    if (timer) {
-      clearInterval(timer);
-      timer = null;
-    }
-    // 立即执行
-    if (immediate) {
-      // 判断是否执行过  如果执行过 timer 不为空
-      const flag = !timer;
-      // 执行函数
-      flag && fn.apply(this, arguments);
-      // n 秒后清空定时器
-      timer = setTimeout(() => {
-        timer = null;
-      }, wait);
-    } else {
-      timer = setInterval(() => {
-        fn.apply(this, arguments);
-      }, wait);
-    }
-  };
-}
 
 function mydebounce(fn, wait) {
   let timer = null;
@@ -56,18 +30,6 @@ function mydebounce(fn, wait) {
   };
 }
 
-function debounceImmediate(fn, delay) {
-  let timer;
-  return function (...args) {
-    const callNow = !timer;
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      timer = null;
-    }, delay);
-    if (callNow) fn.apply(this, args);
-  };
-}
-
 function de(fn, wait = 300) {
   let timer;
   return function (...args) {
@@ -77,6 +39,21 @@ function de(fn, wait = 300) {
       timer = null; //计时结束 可以执行
     }, wait);
     if (callNow) fn.apply(this, args);
+  };
+}
+
+function de1(fn, wait) {
+  let timer = null;
+  return function (...args) {
+    const run = !timer;
+    clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      fn.apply(this, ...args);
+      timer = null;
+    });
+
+    if (run) fn.apply(this, ...args);  
   };
 }
 
